@@ -19,6 +19,9 @@ namespace Employees_CRUD.Models
 
         [Required(ErrorMessage = "Address is required")]
         public string Address { get; set; }
+        public string File { get; set; }
+
+        //public FTPFileSettings FTPFileSettings { get; set; }
     }
 
 }

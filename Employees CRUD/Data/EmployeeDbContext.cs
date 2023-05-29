@@ -10,6 +10,7 @@ namespace Employees_CRUD.Data
         }
 
         public DbSet<Employee> Employees { get; set; }
+        public DbSet<FTPFileSettings> FTPFileSettings { get; set; }
 
     }
 }

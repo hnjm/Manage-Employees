@@ -5,11 +5,11 @@
 <form class="m-auto" [formGroup]="employeeForm" (ngSubmit)="onSubmit()">
 <div mat-dialog-content class="content">
   <div class="row">
-<div>
-  <mat-form-field appearance="fill">
+<div >
+  <mat-form-field style="width: 100%;" appearance="fill">
     <div>
     <mat-label>Name</mat-label>
-    <input matInput type="text" formControlName="name">
+    <input  matInput type="text" formControlName="name">
     <!-- <mat-hint *ngIf="employeeForm.controls['mobile'].invalid" class="text-danger" align="end">jkgjk</mat-hint> -->
   </div>
 
@@ -21,7 +21,7 @@
 
 </div>
 <div>
-  <mat-form-field appearance="fill">
+  <mat-form-field style="width: 100%;" appearance="fill">
     <div>
     <mat-label>email</mat-label>
     <input matInput type="text" formControlName="email">
@@ -38,7 +38,7 @@
 </div>
 
 <div>
-  <mat-form-field appearance="fill">
+  <mat-form-field style="width: 100%;" appearance="fill">
     <div>
     <mat-label>Address</mat-label>
     <input matInput type="text" formControlName="address">
@@ -53,7 +53,7 @@
 </div>
 
 <div>
-  <mat-form-field appearance="fill">
+  <mat-form-field style="width: 100%;" appearance="fill">
     <div>
     <mat-label>Phone</mat-label>
     <input matInput type="text" formControlName="mobile">
@@ -68,6 +68,13 @@
   </div>
 
 </div>
+
+<div>
+  <label>File</label>
+  <input style="width: 100%;" type="file" accept=".txt , .pdf" (change)="onFileSelected($event)" formControlName="fileName">
+</div>
+
+
 
   </div>
 </div>

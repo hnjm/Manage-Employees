@@ -27,12 +27,12 @@ export class EmployeeService implements OnInit{
 
 
 
-  createEmployee(employee: any)
+  createEmployee(employee: FormData)
    {
     return this.http.post('https://localhost:7081/employee', employee);
   }
 
-  updateEmployee(id: number, employee: any)
+  updateEmployee(id: number, employee: FormData)
    {
     return this.http.put<void>('https://localhost:7081/employee/' + id, employee);
   }

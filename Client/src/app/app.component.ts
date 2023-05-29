@@ -9,6 +9,7 @@ import { SnackbarService } from './services/snackbar.service';
 import {SelectionModel} from '@angular/cdk/collections';
 import { NgxSpinnerService } from "ngx-spinner";
 import { DeleteDialogComponent } from './delete-dialog/delete-dialog.component';
+import { HttpClient } from '@angular/common/http';
 
 
 
@@ -19,20 +20,25 @@ import { DeleteDialogComponent } from './delete-dialog/delete-dialog.component';
 })
 export class AppComponent implements OnInit, AfterViewInit{
 
-  displayedColumns: string[] = ['select', 'name', 'email', 'mobile', 'address', 'action'];
+  displayedColumns: string[] = ['select', 'name', 'email', 'mobile', 'address', 'View','action'];
   dataSource: MatTableDataSource<any> = new MatTableDataSource();
   selection = new SelectionModel<any>(true, []);
   // selectthing?: number
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild('input') filterInput! : ElementRef
   employees:any
+  filterEvent!:Event;
+  filterString =''
+  fileName: any;
 
   constructor(private _matDialog : MatDialog,
       private EmployeeService: EmployeeService,
        private snackbarService: SnackbarService,
        private spinner: NgxSpinnerService,
-       private cdr: ChangeDetectorRef) { }
+       private cdr: ChangeDetectorRef,
+       private http:HttpClient) { }
   ngAfterViewInit(): void {
     this.sort.disableClear= true;
     this.dataSource.sort = this.sort;
@@ -80,14 +86,12 @@ export class AppComponent implements OnInit, AfterViewInit{
     const dialogConfig = new MatDialogConfig();
 
     const dialogRef = this._matDialog.open(EmployeeComponent, {
-      width: '300px',
+      width: '500px',
       // position: { top: '100px', left: '420px' },
 });
 
     dialogRef.afterOpened().subscribe({
       next:(val:any) => {
-        // const dialogContainer = dialogRef.componentInstance._elementRef.nativeElement.parentNode;
-        // dialogContainer.classList.add('custom-dialog-container');
         if (val) {
           this.getEmployeeList();
         }
@@ -110,6 +114,7 @@ export class AppComponent implements OnInit, AfterViewInit{
       next:(res:any) => {
         console.log(res)
         this.employees = res;
+
         this.employees.sort((a:any,b:any)=>{
           if(a.name){
             if (a.name.toLowerCase().trim() > b.name.toLowerCase().trim()) {
@@ -126,6 +131,10 @@ export class AppComponent implements OnInit, AfterViewInit{
         this.dataSource = new MatTableDataSource(this.employees)
         this.dataSource.sort = this.sort;
         this.dataSource.paginator = this.paginator;
+        if(this.filterEvent){
+          this.applyFilter(this.filterEvent);
+
+        }
       },
       error:(err) => {console.log(err)},
       complete:() => {
@@ -136,8 +145,11 @@ export class AppComponent implements OnInit, AfterViewInit{
   }
 
   applyFilter(event: Event) {
+
     const filterValue = (event.target as HTMLInputElement).value;
+    this.filterString = filterValue;
     this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.filterEvent=event;
 
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
@@ -170,7 +182,7 @@ export class AppComponent implements OnInit, AfterViewInit{
 
   openDialog(enterAnimationDuration: string = '0', exitAnimationDuration: string = '0'): MatDialogRef<DeleteDialogComponent> {
     return this._matDialog.open(DeleteDialogComponent, {
-      width: '250px',
+      width: '300px',
       enterAnimationDuration,
       exitAnimationDuration,
       position: { top: '0px', left: '480px' },
@@ -213,29 +225,78 @@ export class AppComponent implements OnInit, AfterViewInit{
   openEditeEmpForm(data: any){
     const dilaogRef = this._matDialog.open(EmployeeComponent, {
       data,
-      width: '400px',
+      width: '500px',
 
     });
+
+
+this.fileName = data.file
 
     dilaogRef.afterClosed().subscribe({
       next: (val) => {
         if(val){
           this.getEmployeeList();
+          // this.filterInput.nativeElement.value = ''
+            // this.applyFilter(this.filterEvent);
+            this.dataSource.filter = this.filterString.trim().toLowerCase();
+
+            if (this.dataSource.paginator) {
+              this.dataSource.paginator.firstPage();
+            }
+
+
+
         }
       }
     })
 
 
-    this.EmployeeService.updateEmployee(data.id, data).subscribe({
-      next: (res) => {
-        console.log(res);
-        this.getEmployeeList();
-      },
-      error: (err) => {
-        console.log(err);
-      }
-    })
+    // this.EmployeeService.updateEmployee(data.id, data).subscribe({
+    //   next: (res) => {
+    //     console.log(res);
+    //     this.getEmployeeList();
+    //   },
+    //   error: (err) => {
+    //     console.log(err);
+    //   }
+    // })
   }
+
+
+
+
+downloadFile(fileName: string) {
+  const url = `https://localhost:7081/employee/download/${fileName}`;
+
+  // Make an HTTP GET request to download the file
+  this.http.get(url, { responseType: 'blob' }).subscribe((response: any) => {
+    // Create a blob object from the response
+    // const blob = new Blob([response], { type: 'application/octet-stream' });
+
+    // // Create a temporary URL for the blob object
+    // const blobUrl = window.URL.createObjectURL(blob);
+    // console.log(blobUrl)
+
+    // // Open the file in a new browser tab
+    // window.open(blobUrl);
+
+    // // Optionally, you can revoke the URL after the file is opened
+    // // to free up memory resources
+    // // window.URL.revokeObjectURL(url);
+      const link = document.createElement('a');
+  link.href = url;
+  link.target = '_blank'; // Open in a new tab or window
+
+  // Trigger the download by programmatically clicking the link
+  link.click();
+
+  });
+}
+
+
+
+
+
 
 
 

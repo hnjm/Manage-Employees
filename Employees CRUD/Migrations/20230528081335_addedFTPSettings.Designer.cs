@@ -3,6 +3,7 @@ using Employees_CRUD.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Employees_CRUD.Migrations
 {
     [DbContext(typeof(EmployeeDbContext))]
-    partial class EmployeeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230528081335_addedFTPSettings")]
+    partial class addedFTPSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,10 +39,6 @@ namespace Employees_CRUD.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("File")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Mobile")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -62,21 +60,41 @@ namespace Employees_CRUD.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FTPFileSettingsId"), 1L, 1);
 
-                    b.Property<string>("FTP_Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("FTP_Server")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("FTP_Password")
+                        .HasColumnType("int");
 
                     b.Property<string>("FTP_Username")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("FTPFileSettingsId");
 
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
+
                     b.ToTable("FTPFileSettings");
+                });
+
+            modelBuilder.Entity("Employees_CRUD.Models.FTPFileSettings", b =>
+                {
+                    b.HasOne("Employees_CRUD.Models.Employee", null)
+                        .WithOne("FTPFileSettings")
+                        .HasForeignKey("Employees_CRUD.Models.FTPFileSettings", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Employees_CRUD.Models.Employee", b =>
+                {
+                    b.Navigation("FTPFileSettings")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
