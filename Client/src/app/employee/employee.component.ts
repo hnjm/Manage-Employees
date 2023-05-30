@@ -1,103 +1,5 @@
-// import { Component, ElementRef, Inject, OnInit } from '@angular/core';
-// import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-// import { EmployeeService } from '../services/employee.service';
-// import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-// import { SnackbarService } from '../services/snackbar.service';
 
-// @Component({
-//   selector: 'app-employee',
-//   templateUrl: './employee.component.html',
-//   styleUrls: ['./employee.component.scss']
-// })
-// export class EmployeeComponent implements OnInit{
-
-//   employeeForm!: FormGroup;
-
-
-
-//   constructor(
-//     private formBuilder: FormBuilder,
-//     private EmployeeService: EmployeeService,
-//     private dialogRef: MatDialogRef<EmployeeComponent>,
-//     @Inject(MAT_DIALOG_DATA) public data: any,
-//     private snackbarService: SnackbarService,
-//     public _elementRef:ElementRef
-//   ) {}
-
-//   ngOnInit(): void {
-//     this.getEmpList();
-//     this .empForm();
-//     this.employeeForm.patchValue(this.data);
-//   }
-
-//   getEmpList(){
-//     this.EmployeeService.getEmployees().subscribe({
-//       next:(res) => {
-//         console.log(res)
-//       }
-//     })
-
-//   }
-
-//   onSubmit() {
-//     var btns = document.getElementById('buttons')
-
-//     btns?.setAttribute("disabled", "true")
-
-//     if (this.employeeForm.valid) {
-//       if(this.data){
-//         this.EmployeeService.updateEmployee(this.data.id,this.employeeForm.value).subscribe({
-//           next:(res) => {
-//             console.log(res);
-//             // alert("Employee updated successfuly...")
-//             this.snackbarService.openSnackBar('Employee updated successfuly...', 'Done')
-
-//             this.getEmpList();
-
-//             this.dialogRef.close(true);
-
-//           },
-//           error: (err)=>{console.log(err)},
-//           complete: () => {    btns?.setAttribute("disabled", "false")  }
-//         })
-
-//       } else {
-//         console.log(this.employeeForm.value)
-//         this.EmployeeService.createEmployee(this.employeeForm.value).subscribe({
-//           next:(res) => {
-//             console.log(res);
-//             // alert("Employee added successfuly...")
-//             this.snackbarService.openSnackBar("Employee added successfuly...", 'Done')
-//             this.getEmpList();
-//             this.dialogRef.close(true);
-//           },
-//           error: (err)=>{console.log(err)},
-//           complete: () => {    btns?.setAttribute("disabled", "false")  }
-
-//         })
-
-//       }
-//     }
-//     // console.log(this.employeeForm.value)
-//   }
-
-//   empForm(){
-//     this.employeeForm = this.formBuilder.group({
-//       id: ['0'],
-//       name: ['', Validators.required],
-//       'email': ['',[Validators.required,Validators.pattern(/^[\w.-]+@[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)+$/)]],
-//       mobile: ['', [Validators.required, Validators.pattern('^(011|012|010)\\d{8}$')]],
-//       address: ['', Validators.required]
-//     });
-
-//   }
-
-
-// }
-
-
-
-import { Component, ElementRef, Inject, OnInit } from '@angular/core';
+import { Component, ElementRef, Inject, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { Form, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EmployeeService } from '../services/employee.service';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -113,6 +15,11 @@ export class EmployeeComponent implements OnInit {
 
   employeeForm!: FormGroup;
   targetFile!:File
+  @ViewChild('fileInput') fileInput: any;
+  // selectedFile=this.data.fileData;
+  selectedFile?:File | null;
+  fileName?:string;
+  updatedFile?: File;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -128,7 +35,42 @@ export class EmployeeComponent implements OnInit {
     this.getEmpList();
     this.empForm();
     this.employeeForm.patchValue(this.data);
+    if(this.data){
+    setTimeout(() => {
+      this.fileService.getFile.subscribe((data)=>{
+
+        this.selectedFile=data;
+        this.fileName=this.selectedFile?.name
+        console.log(this.selectedFile?.name);
+
+        if (this.selectedFile) {
+          this.fileName = this.selectedFile.name;
+
+          // Manually set the type property based on the file extension
+          let fileType: string;
+          if (this.fileName.endsWith('.pdf')) {
+            fileType = 'application/pdf';
+          } else if (this.fileName.endsWith('.txt')) {
+            fileType = 'text/plain';
+          } else {
+            // Set a default type if the file extension is unknown
+            fileType = 'application/octet-stream';
+          }
+
+          // Create a new File object with the updated type
+          this.updatedFile = new File([this.selectedFile], this.fileName, { type: fileType });
+          this.targetFile=this.updatedFile
+        }
+      }
+
+      )
+      console.log(this.updatedFile)
+
+    }, 200);
   }
+  }
+
+
 
   getEmpList() {
     this.employeeService.getEmployees().subscribe({
@@ -136,6 +78,7 @@ export class EmployeeComponent implements OnInit {
         console.log(res);
       }
     });
+
   }
 
 
@@ -190,6 +133,8 @@ export class EmployeeComponent implements OnInit {
           error: (err) => {
             console.log(err);
             btns?.removeAttribute('disabled');
+          },
+          complete: ()=>{
           }
         });
 
@@ -281,6 +226,7 @@ export class EmployeeComponent implements OnInit {
 
 
   empForm() {
+    if(!this.data){
     this.employeeForm = this.formBuilder.group({
       id: ['0'],
       name: ['', Validators.required],
@@ -289,6 +235,18 @@ export class EmployeeComponent implements OnInit {
       address: ['', Validators.required],
       fileName: ['', Validators.required]
     });
+  }else{
+    this.employeeForm = this.formBuilder.group({
+      id: ['0'],
+      name: ['', Validators.required],
+      email: ['', [Validators.required, Validators.pattern(/^[\w.-]+@[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)+$/)]],
+      mobile: ['', [Validators.required, Validators.pattern('^(011|012|010)\\d{8}$')]],
+      address: ['', Validators.required],
+      fileName: ['']
+    });
+
+  }
+
   }
 }
 

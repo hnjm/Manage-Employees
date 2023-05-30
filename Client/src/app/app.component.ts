@@ -10,6 +10,7 @@ import {SelectionModel} from '@angular/cdk/collections';
 import { NgxSpinnerService } from "ngx-spinner";
 import { DeleteDialogComponent } from './delete-dialog/delete-dialog.component';
 import { HttpClient } from '@angular/common/http';
+import { FileService } from './services/file.service';
 
 
 
@@ -32,13 +33,15 @@ export class AppComponent implements OnInit, AfterViewInit{
   filterEvent!:Event;
   filterString =''
   fileName: any;
+  selectedFile!:File;
 
   constructor(private _matDialog : MatDialog,
       private EmployeeService: EmployeeService,
        private snackbarService: SnackbarService,
        private spinner: NgxSpinnerService,
        private cdr: ChangeDetectorRef,
-       private http:HttpClient) { }
+       private http:HttpClient,
+       private fileServices: FileService) { }
   ngAfterViewInit(): void {
     this.sort.disableClear= true;
     this.dataSource.sort = this.sort;
@@ -223,6 +226,7 @@ export class AppComponent implements OnInit, AfterViewInit{
 
 
   openEditeEmpForm(data: any){
+    // data.fileData=this.selectedFile;
     const dilaogRef = this._matDialog.open(EmployeeComponent, {
       data,
       width: '500px',
@@ -231,6 +235,21 @@ export class AppComponent implements OnInit, AfterViewInit{
 
 
 this.fileName = data.file
+// console.log(this.fileName)
+this.http.get(`https://localhost:7081/employee/download/${this.fileName}`, { responseType: 'blob' })
+.subscribe((fileData: Blob) => {
+  const file = new File([fileData], this.fileName);
+  this.selectedFile = file;
+
+this.fileServices.file.next(this.selectedFile);
+
+
+
+
+
+  // this.employeeForm.patchValue({ fileName: file }); // Set the file input value
+});
+
 
     dilaogRef.afterClosed().subscribe({
       next: (val) => {
@@ -270,19 +289,6 @@ downloadFile(fileName: string) {
 
   // Make an HTTP GET request to download the file
   this.http.get(url, { responseType: 'blob' }).subscribe((response: any) => {
-    // Create a blob object from the response
-    // const blob = new Blob([response], { type: 'application/octet-stream' });
-
-    // // Create a temporary URL for the blob object
-    // const blobUrl = window.URL.createObjectURL(blob);
-    // console.log(blobUrl)
-
-    // // Open the file in a new browser tab
-    // window.open(blobUrl);
-
-    // // Optionally, you can revoke the URL after the file is opened
-    // // to free up memory resources
-    // // window.URL.revokeObjectURL(url);
       const link = document.createElement('a');
   link.href = url;
   link.target = '_blank'; // Open in a new tab or window

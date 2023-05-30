@@ -114,39 +114,54 @@ namespace Employees_CRUD.Controllers
             if (formFile == null || formFile.Length == 0)
                 return BadRequest("No file was provided for upload.");
 
-            var fileName = Guid.NewGuid() + formFile.FileName;
 
-            // Specify the FTP server details
-            var ftpServer = "ftp://localhost";
-            var ftpUsername = "empcrud";
-            var ftpPassword = "E@2023";
-            //var guid = Guid.NewGuid().ToString();
+            var employeeData = await _dbContext.Employees.FindAsync(id);
 
-            // Create a request using the FTP URL
-            var request = (FtpWebRequest)WebRequest.Create($"{ftpServer}/{fileName}");
-            request.Method = WebRequestMethods.Ftp.UploadFile;
-            request.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
-
-            // Upload the file to the FTP server
-            using (var stream = formFile.OpenReadStream())
+            if(employeeData.File != employeDto.file.FileName)
             {
-                using (var ftpStream = request.GetRequestStream())
+
+                //_dbContext.Entry(employeeData).State = EntityState.Detached;
+
+
+                var fileName = Guid.NewGuid() + formFile.FileName;
+
+
+                // Specify the FTP server details
+                var ftpServer = "ftp://localhost";
+                var ftpUsername = "empcrud";
+                var ftpPassword = "E@2023";
+                //var guid = Guid.NewGuid().ToString();
+
+                // Check if employee already has a file
+                if (!string.IsNullOrEmpty(employeeData.File))
                 {
-                    stream.CopyTo(ftpStream);
+                    await DeleteFileFromFtp(employeeData.File);
                 }
+
+                // Create a request using the FTP URL
+                var request = (FtpWebRequest)WebRequest.Create($"{ftpServer}/{fileName}");
+                request.Method = WebRequestMethods.Ftp.UploadFile;
+                request.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+                // Upload the file to the FTP server
+                using (var stream = formFile.OpenReadStream())
+                {
+                    using (var ftpStream = request.GetRequestStream())
+                    {
+                        stream.CopyTo(ftpStream);
+                    }
+                }
+                employeeData.File = fileName;
+
             }
 
-            var employee = new Employee
-            {
-                Id = id,
-                Email = employeDto.Email,
-                Address = employeDto.Address,
-                Mobile = employeDto.Mobile,
-                Name = employeDto.Name,
-                File =  fileName
-            };
+            employeeData.Id = id;
+            employeeData.Email = employeDto.Email;
+            employeeData.Address = employeDto.Address;
+            employeeData.Mobile = employeDto.Mobile;
+            employeeData.Name = employeDto.Name;
 
-            _dbContext.Entry(employee).State = EntityState.Modified;
+            //_dbContext.Entry(employeeData).State = EntityState.Modified;
 
             try
             {
@@ -401,6 +416,37 @@ namespace Employees_CRUD.Controllers
                     return "application/octet-stream";
             }
         }
+
+
+        private async Task DeleteFileFromFtp(string fileName)
+        {
+            // Get FTP settings
+            // Specify the FTP server details
+            var ftpServer = "ftp://localhost/";
+            var ftpUsername = "empcrud";
+            var ftpPassword = "E@2023";
+
+            var filePath = ftpServer + fileName;
+
+            // Create an FtpWebRequest
+            var request = (FtpWebRequest)WebRequest.Create(filePath);
+            // Set the method to DeleteFile
+            request.Method = WebRequestMethods.Ftp.DeleteFile;
+            // Set the NetworkCredentials
+            request.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+            // Send the request to delete the file
+            using (var response = (FtpWebResponse)await request.GetResponseAsync())
+            {
+                // Check if the deletion was successful
+                if (response.StatusCode != FtpStatusCode.FileActionOK)
+                {
+                    throw new Exception("Failed to delete the file from the FTP server.");
+                }
+            }
+        }
+
+
 
 
 

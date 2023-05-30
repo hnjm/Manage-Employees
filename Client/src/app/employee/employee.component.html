@@ -71,7 +71,9 @@
 
 <div>
   <label>File</label>
-  <input style="width: 100%;" type="file" accept=".txt , .pdf" (change)="onFileSelected($event)" formControlName="fileName">
+  <input style="width: 100%;" type="file" accept=".txt , .pdf" (change)="onFileSelected($event)" #fileInput formControlName="fileName">
+  <p *ngIf="updatedFile">{{ updatedFile.name }}</p>
+
 </div>
 
 
